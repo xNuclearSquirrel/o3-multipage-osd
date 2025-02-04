@@ -1,3 +1,0 @@
-type = scripted
-command = modmanager enable fpv_glasses o3-multipage-osd
-stop-command = modmanager disable fpv_glasses o3-multipage-osd

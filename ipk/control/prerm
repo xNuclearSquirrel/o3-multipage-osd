@@ -1,2 +1,0 @@
-#!/system/bin/sh
-/opt/sbin/dinitctl -u disable o3-multipage-osd || true
