@@ -1,5 +1,5 @@
 Package: o3-multipage-osd
-Version: 1.0.0
+Version: 1.0.1
 Maintainer: xNuclearSquirrel
 Description: Enables multipage OSD support (up to 3 pages). Also includes OSD recording to .osd file and custom fonts.
 Architecture: pigeon-glasses-v2
