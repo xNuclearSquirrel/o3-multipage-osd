@@ -12,7 +12,7 @@ This mod combines and replaces two previous mods:
 - Using smaller fonts (e.g. a 1 page font when the FC expects 4 pages), will just remap the symbols of higher pages to page 1. So you can use 1 page betaflight fonts if you don't want the coloroptions.
 - You can use your own fonts, just make sure it is a v3 BMP object with 32bit depth (alpha channel) and no compressionor use SNEAKY_FPV's fonts in the fonts folder.
 - This mod also records the OSD to a .osd file. This is always enabled.
-- Font selection is done by writing the font name into font.txt, or renaming a font to HD_Font.bmp. If you createa font.txt and leave it empty you disable the mod.
+- Font selection is done by writing the font name into font.txt. If you createa font.txt and leave it empty you disable the mod.
 
 ##### Install
 - coming soon 
@@ -22,6 +22,11 @@ This mod combines and replaces two previous mods:
 - open up shell with `adb shell`
 - `opkg install /tmp/o3-multipage-osd_1.0.0_pigeon-glasses-v2.ipk`
 - or `opkg upgrade /tmp/o3-multipage-osd_1.0.0_pigeon-glasses-v2.ipk` to upgrade an older verison.
+
+##### Configuration
+- copy fonts to the SD card root directory
+- select font by writing the font name into font.txt (e. g. IANV_nexus, BTFL_sphere)
+- If you are using INAV then in the OSD tab select "AVATAR" to get the 53*20 grid.
 
 ##### Known issues
 - You need to manually select the font! Automatic font selection based on the FC firmware is not supported! If you switch between INav and Betaflight frequently consider having two SD cards with differnt fonts to swap in and out.
