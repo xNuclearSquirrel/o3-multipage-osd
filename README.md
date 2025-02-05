@@ -4,6 +4,7 @@ This mod combines and replaces two previous mods:
 - o3-osd-record
 - o3-custom-fonts
 
+important to uninstall these first!
 
 ## NOTES
 - The mod opens BMP images from the SD Card and uses them as the OSD font resource.
