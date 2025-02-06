@@ -7,6 +7,16 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <ctype.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <poll.h>
+#include <linux/input.h>
+#include <time.h>
+#include <stdbool.h>
+
+#define INPUT_FILENAME "/dev/input/event0"
 //---------------------------------------------------------------------
 // Global Definitions & Constants (Internal)
 //---------------------------------------------------------------------
@@ -19,7 +29,17 @@ static const char *variableBmpPath = "/storage/sdcard0/font.txt";
 //---------------------------------------------------------------------
 // Global State for External Resource
 //---------------------------------------------------------------------
-static bool externalResourceValid   = false;
+bool externalResourceValid   = false;
+int fontPages = 1;
+static char names[MAX_NAMES][MAX_STRING_LENGTH];
+static char externalBmpPathBuffer[MAX_STRING_LENGTH] = {0};
+
+static int fd = -1;
+static struct pollfd pfd = { .fd = -1, .events = POLLIN };
+static bool backButtonPressed = false;
+static struct timespec backButtonTime;
+int fontSelection = 0;
+
 // These will hold the external file’s dimensions (read from the BMP header).
 static int  g_externalWidth  = 0;
 static int  g_externalHeight = 0;
@@ -40,6 +60,7 @@ static int  g_lockedHandle = 0;
 // Cached BMP image data – once loaded it is reused.
 static BmpData g_bmpData = {0, 0, NULL};
 
+
 //---------------------------------------------------------------------
 // Function Pointer Variables for Runtime‑Resolved Functions
 //---------------------------------------------------------------------
@@ -52,6 +73,7 @@ static EwCreateBitmap_t         real_EwCreateBitmap = NULL;
 static EwLockBitmap_t           real_EwLockBitmap = NULL;
 static EwUnlockBitmap_t         real_EwUnlockBitmap = NULL;
 static EwSetRectH_t             real_EwSetRectH = NULL;
+static EwSetRectW_t             real_EwSetRectW = NULL;
 static ResourcesExternBitmap_OnSetName_t real_ResourcesExternBitmap_OnSetName = NULL;
 
 // A pointer to the virtual method table for external bitmaps.
@@ -114,7 +136,21 @@ bool LoadBmp32(const char* path, BmpData* out) {
     out->width  = w;
     out->height = h;
     out->data   = data;
+
     return true;
+}
+
+char *trim_whitespace(char *str) {
+    char *end;
+    while (isspace((unsigned char)*str))
+        str++;
+    if (*str == '\0')
+        return str;
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end))
+        end--;
+    *(end + 1) = '\0';
+    return str;
 }
 
 //---------------------------------------------------------------------
@@ -125,51 +161,60 @@ bool LoadBmp32(const char* path, BmpData* out) {
 // Can be made in magick or with photoshop.
 // Returns true on success and sets *outWidth and *outHeight.
 //---------------------------------------------------------------------
+
+
 bool check_external_resource(int *outWidth, int *outHeight) {
-    char varBuf[MAX_STRING_LENGTH];
     // First, check if the variable file exists.
     FILE *varfp = fopen(variableBmpPath, "r");
     if (varfp != NULL) {
         // Read one line from the variable file.
-        if (fgets(varBuf, MAX_STRING_LENGTH, varfp) != NULL) {
-            // Remove any trailing newline or carriage-return characters.
-            size_t len = strlen(varBuf);
-            while (len > 0 && (varBuf[len - 1] == '\n' || varBuf[len - 1] == '\r')) {
-                varBuf[len - 1] = '\0';
+        int count = 0;
+        char buf[MAX_STRING_LENGTH];
+
+        while (count < MAX_NAMES && fgets(buf, MAX_STRING_LENGTH, varfp) != NULL) {
+            size_t len = strlen(buf);
+            while (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r')) {
+                buf[len - 1] = '\0';
                 len--;
             }
-            // If the file is empty, the mod is turned off.
-            if (len == 0) {
-                fclose(varfp);
-                return false;
+            char *trimmed = trim_whitespace(buf);
+            char *delim = strpbrk(trimmed, ".,");
+            if (delim != NULL) {
+                *delim = '\0';
             }
-            // Remove any extension (everything after the first period).
-            char *dot = strchr(varBuf, '.');
-            if (dot != NULL) {
-                *dot = '\0';
+            // Trim again in case extra spaces remain.
+            trimmed = trim_whitespace(trimmed);
+            // Only store non-empty names.
+            if (trimmed[0] != '\0') {
+                // Copy trimmed into our static array.
+                strncpy(names[count], trimmed, MAX_STRING_LENGTH - 1);
+                // Ensure null termination.
+                names[count][MAX_STRING_LENGTH - 1] = '\0';
+                count++;
             }
-            // Build the full path: "/storage/sdcard0/<name>.bmp"
-            char fullPath[MAX_STRING_LENGTH];
-            snprintf(fullPath, MAX_STRING_LENGTH, "/storage/sdcard0/%s.bmp", varBuf);
-            // Test if the constructed file exists.
-            FILE *testfp = fopen(fullPath, "rb");
-            if (testfp != NULL) {
-                fclose(testfp);
-                externalBmpPath = strdup(fullPath);
-            } else {
-                externalBmpPath = strdup(standardBmpPath);
-            }
-        } else {
-            // If the file is empty, return false to turn off the mod.
-            fclose(varfp);
+        }
+
+        fclose(varfp);
+        if (count == 0) {
+            // No valid names found, return immediately
             return false;
         }
-        fclose(varfp);
-    } else {
-        // If the variable file does not exist, use the standard BMP path.
-        externalBmpPath = strdup(standardBmpPath);
-    }
 
+        fontSelection = fontSelection % count; //to loop it back around
+        
+        snprintf(externalBmpPathBuffer, MAX_STRING_LENGTH, "/storage/sdcard0/%s.bmp", names[fontSelection]);
+
+        // Test if the constructed file exists.
+        FILE *testfp = fopen(externalBmpPathBuffer, "rb");
+        if (testfp != NULL) {
+            fclose(testfp);
+            externalBmpPath = externalBmpPathBuffer;
+        } else {
+            externalBmpPath = standardBmpPath;
+        }
+    }
+    if(!externalBmpPath)
+        return false;
     // Open the chosen BMP file and check its header.
     FILE *fp = fopen(externalBmpPath, "rb");
     if (!fp)
@@ -192,14 +237,61 @@ bool check_external_resource(int *outWidth, int *outHeight) {
         return false;
     if (bpp != 32)
         return false;
-    // The width should be the same as the original or it will mess up the font. the height can be any height (higher = more tiles) but should be at least the original 10 rows.
-    if (!(w == ORIGINAL_WIDTH) || h < ORIGINAL_HEIGHT){
+    
+    //This should ensure that there a font is 16 tiles high and 16*pages tiles wide
+    if ((w % (16 * TILE_WIDTH) != 0) || !(h == (16 * TILE_HEIGHT)) ) {
         return false;
-    }
+    }    
+    fontPages = w / TILE_WIDTH / 16;
         
     *outWidth  = w;
     *outHeight = h;
     return true;
+}
+
+
+
+void checkKeypress(void) {
+    if (fd < 0) {
+        fd = open(INPUT_FILENAME, O_RDONLY | O_NONBLOCK);
+        if (fd < 0) {
+            perror("open");
+            return;
+        } else {
+            pfd.fd = fd;
+        }
+    }
+    int ret = poll(&pfd, 1, 0);
+    if (ret > 0 && (pfd.revents & POLLIN)) {
+        struct input_event ev;
+        while (read(fd, &ev, sizeof(ev)) > 0) {
+            if (ev.code == 201) {
+                if (ev.value == 1) {
+                    if (!backButtonPressed) {
+                        backButtonPressed = true;
+                        clock_gettime(CLOCK_MONOTONIC, &backButtonTime);
+                    }
+                } else if (ev.value == 0) {
+                    backButtonPressed = false;
+                }
+            }
+        }
+    }
+
+    if (backButtonPressed) {
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        double elapsed = (now.tv_sec - backButtonTime.tv_sec) +
+                         (now.tv_nsec - backButtonTime.tv_nsec) / 1e9;
+        if (elapsed >= 5.0) {
+            fontSelection++;
+            g_customResource = NULL;
+            free(g_bmpData.data);
+            g_bmpData.data = NULL;
+            
+            clock_gettime(CLOCK_MONOTONIC, &backButtonTime);
+        }
+    }
 }
 
 //---------------------------------------------------------------------
@@ -211,7 +303,8 @@ bool check_external_resource(int *outWidth, int *outHeight) {
 //---------------------------------------------------------------------
 int* EwLoadResource(int param_1, unsigned int param_2)
 {
-    
+
+
     // Resolve our own hook first.
     if (!real_EwLoadResource) {
         real_EwLoadResource = (EwLoadResource_t)dlsym(RTLD_NEXT, "EwLoadResource");
@@ -267,6 +360,7 @@ int* EwLoadResource(int param_1, unsigned int param_2)
     
     // Only process the resource if it matches the standard dimensions.
     if (width == ORIGINAL_WIDTH && height == ORIGINAL_HEIGHT) {
+        checkKeypress();
         // If our custom resource was already created, check its ID. The first 4 byte are some identifier I think. 
         // The problem is when the goggles lose connections I think the canvas resets and the font resource is gone.
         // The poitner is still pointing to a structure, but no OSD is rendered. However the ID also changes, so we can force a reload every time that happens.
@@ -277,6 +371,7 @@ int* EwLoadResource(int param_1, unsigned int param_2)
                 return (int*)g_customResource;
             }
         }
+        
 
         // Check the external resource once every time we reload it. You could remove the SD mit flight and it will just default to the system font.
         if (check_external_resource(&g_externalWidth, &g_externalHeight)) {
@@ -311,10 +406,14 @@ int* EwLoadResource(int param_1, unsigned int param_2)
         
         // Create the managed string from our dynamic literal. This is really important, ResourcesExternBitmap_OnSetName will crash with unmanaged strings.
         uint32_t managedFilename = real_EwNewString((unsigned short*)g_externalResourceLiteral);
-        
+
         // Now set the resource name.
         real_ResourcesExternBitmap_OnSetName(g_customResource, (unsigned short *)managedFilename);
         //ResourcesExternBitmap_load() is automatically called by ResourcesExternBitmap_OnSetName
+
+        //we should be able to free the memory of the string literal
+        free(g_externalResourceLiteral);
+        g_externalResourceLiteral = NULL;
 
         // Store resource ID to compare next time.
         cachedCustomResourceID = *(uint32_t*)g_customResource;
@@ -340,6 +439,7 @@ int EwCreateBitmap(int a0, int w, int h, int a3, int a4)
     }
     
     int handle = real_EwCreateBitmap(a0, w, h, a3, a4);
+    
     
     if (externalResourceValid && w == g_externalWidth && h == g_externalHeight && handle != 0) {
         g_specialHandle = handle;
@@ -387,6 +487,7 @@ void EwUnlockBitmap(int* lockedPtr)
     if (lockedPtr && lockedPtr == g_lockedPtr &&
         g_lockedHandle == g_specialHandle && g_specialHandle != 0)
     {
+        
         int basePtr = lockedPtr[0];
         int stride  = lockedPtr[2];
         int w = g_externalWidth;
@@ -439,4 +540,18 @@ void EwSetRectH(void *rect, int p1, int p2, int p3, int p4, int height)
     if (height == ORIGINAL_HEIGHT && externalResourceValid)
         height = g_externalHeight;
     real_EwSetRectH(rect, p1, p2, p3, p4, height);
+}
+
+void EwSetRectW(void *rect, int p1, int p2, int p3, int p4, int width)
+{
+    if (!real_EwSetRectW) {
+        real_EwSetRectW = (EwSetRectW_t)dlsym(RTLD_NEXT, "EwSetRectW");
+        if (!real_EwSetRectW) {
+            return;
+        }
+    }
+
+    if (width == ORIGINAL_WIDTH && externalResourceValid)
+        width = g_externalWidth;
+    real_EwSetRectW(rect, p1, p2, p3, p4, width);
 }

@@ -6,8 +6,10 @@
 #include <dlfcn.h>
 #include <pthread.h>
 
+
 #include "displayport_buffer.h"
 #include "ring_buffer.h" 
+#include "o3-custom-fonts.h"
 
 // Forward‐declared real function types:
 typedef void* (*CharItemsAt_t)(int base, int col, int row);
@@ -45,9 +47,36 @@ static int g_renderBufferInitialized = 0;
   param_1 + 0x84   => base pointer for CharItemsAt/Create
   param_1 + 0x112c => pointer for the FontGroup
 */
+
+void getScrollOffset(uint16_t glyphID, int *offsetXY)
+{
+    int effectiveGlyph;
+    int pageIndex;
+    int localIndex;
+    
+    if (fontPages == 1) {
+        effectiveGlyph = glyphID % 256;
+        pageIndex = 0;
+    } else {
+        int totalGlyphs = fontPages * 256;
+        effectiveGlyph = glyphID % totalGlyphs;
+        pageIndex = effectiveGlyph / 256;
+    }
+    
+    localIndex = effectiveGlyph % 256;
+    int col = (localIndex % 16) + (pageIndex * 16);
+    int row = localIndex / 16;
+    offsetXY[0] = -col * TILE_WIDTH;
+    offsetXY[1] = -row * TILE_HEIGHT;
+}
+
+
+
+
+
 void MxDisplayPortDisplayPort_DrawScreen(int param_1, int param_2)
 {
-    
+
     if (orig_func == NULL) {
         orig_func = (orig_MxDisplayPortDisplayPort_DrawScreen_t)dlsym(RTLD_NEXT, "MxDisplayPortDisplayPort_DrawScreen");
         if (!orig_func) {
@@ -57,9 +86,9 @@ void MxDisplayPortDisplayPort_DrawScreen(int param_1, int param_2)
 
     int font_width;
     int font_height; // Uninitialized, will be set by check_external_resource()
-
-    if (!check_external_resource(&font_width, &font_height)) {  // Pass addresses using &
+    if (!externalResourceValid) {  // Pass addresses using &
         return orig_func(param_1, param_2);
+    }else{
     }
 
 
@@ -167,12 +196,15 @@ void MxDisplayPortDisplayPort_DrawScreen(int param_1, int param_2)
 
             // 8b) Retrieve glyph from our local buffer
             uint16_t glyphID = g_renderBuffer[row * DP_MAX_COLS + col];
-            uint16_t pages = (font_width != 0) ? (font_height / font_width) : 1;
-            glyphID = glyphID % (256 * pages);
+            
+
+
 
             // 8c) Compute offset for the glyph
             int offsetXY[2] = {0,0};
-            real_GetScrollOffset(offsetXY, param_1 + 0x112c, (unsigned int)glyphID);
+
+            //real_GetScrollOffset(offsetXY, param_1 + 0x112c, (unsigned int)glyphID);
+            getScrollOffset(glyphID, offsetXY);
 
             // 8d) Apply offset
             real_OnSetScrollOffset((int)charItemObj, offsetXY[0], offsetXY[1]);

@@ -15,9 +15,16 @@ extern "C" {
 // The original resource is identified by these dimensions.
 #define ORIGINAL_WIDTH   416
 #define ORIGINAL_HEIGHT  390
+#define TILE_WIDTH   26
+#define TILE_HEIGHT  39
 
 // Maximum string length for our dynamic file name.
-#define MAX_STRING_LENGTH 1024
+#define MAX_STRING_LENGTH 256
+#define MAX_NAMES 10
+
+extern bool externalResourceValid;
+extern int fontPages;
+extern int fontSelection;
 
 //---------------------------------------------------------------------
 // BMP Data Structure
@@ -40,6 +47,7 @@ typedef int (*EwCreateBitmap_t)(int a0, int w, int h, int a3, int a4);
 typedef int* (*EwLockBitmap_t)(int bitmapHandle, int x, int y, int w, int h, int something, int something2);
 typedef void (*EwUnlockBitmap_t)(int* lockedPtr);
 typedef void (*EwSetRectH_t)(void *rect, int p1, int p2, int p3, int p4, int height);
+typedef void (*EwSetRectW_t)(void *rect, int p1, int p2, int p3, int p4, int width);
 typedef void (*ResourcesExternBitmap_OnSetName_t)(void *param_1, const uint16_t *param_2);
 
 //---------------------------------------------------------------------

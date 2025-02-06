@@ -119,7 +119,6 @@ void DisplayPortProcess(uint32_t param_1, int param_2)
                     uint8_t col       = *(uint8_t *)(param_2 + 0x16);
                     const uint8_t* strPtr = (const uint8_t*)(param_2 + 0x18);
                     uint8_t attribute = (*(uint8_t *)(param_2 + 0x17)) & 0x03; // Keep only lower 2 bits (0-3)
-                    if (attribute == 3) attribute = 2; // Ensure 3 falls back to 2
                     
 
 
