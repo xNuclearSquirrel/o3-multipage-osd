@@ -50,6 +50,10 @@ typedef void (*EwSetRectH_t)(void *rect, int p1, int p2, int p3, int p4, int hei
 typedef void (*EwSetRectW_t)(void *rect, int p1, int p2, int p3, int p4, int width);
 typedef void (*ResourcesExternBitmap_OnSetName_t)(void *param_1, const uint16_t *param_2);
 
+typedef void (*EwFreeBitmap_t)(void* bitmapHandle);
+
+typedef void (*ResourcesExternBitmap__Done_t)(void* resourcePtr);
+
 //---------------------------------------------------------------------
 // Hook Function Prototypes
 //---------------------------------------------------------------------

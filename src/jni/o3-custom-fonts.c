@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <dirent.h>  // for opendir, readdir, closedir
+#include <sys/stat.h> // for stat, if needed
 
 #include <ctype.h>
 
@@ -14,7 +16,6 @@
 #include <poll.h>
 #include <linux/input.h>
 #include <time.h>
-#include <stdbool.h>
 
 #define INPUT_FILENAME "/dev/input/event0"
 //---------------------------------------------------------------------
@@ -23,8 +24,7 @@
 
 // The external file path is defined once.
 static const char *externalBmpPath = NULL;
-static const char *standardBmpPath = "/storage/sdcard0/HD_Font.bmp";
-static const char *variableBmpPath = "/storage/sdcard0/font.txt";
+static const char* FONTS_DIR = "/storage/sdcard0/fonts/";
 
 //---------------------------------------------------------------------
 // Global State for External Resource
@@ -33,6 +33,7 @@ bool externalResourceValid   = false;
 int fontPages = 1;
 static char names[MAX_NAMES][MAX_STRING_LENGTH];
 static char externalBmpPathBuffer[MAX_STRING_LENGTH] = {0};
+
 
 static int fd = -1;
 static struct pollfd pfd = { .fd = -1, .events = POLLIN };
@@ -76,8 +77,14 @@ static EwSetRectH_t             real_EwSetRectH = NULL;
 static EwSetRectW_t             real_EwSetRectW = NULL;
 static ResourcesExternBitmap_OnSetName_t real_ResourcesExternBitmap_OnSetName = NULL;
 
+static EwFreeBitmap_t real_EwFreeBitmap = NULL;
+static ResourcesExternBitmap__Done_t real_ResourcesExternBitmap__Done = NULL;
+
+
 // A pointer to the virtual method table for external bitmaps.
 static void *vmt_ResourcesExternBitmap = NULL;
+
+
 
 //---------------------------------------------------------------------
 // Helper: Convert an ASCII string into a newly allocated UTF‑16 string.
@@ -140,18 +147,6 @@ bool LoadBmp32(const char* path, BmpData* out) {
     return true;
 }
 
-char *trim_whitespace(char *str) {
-    char *end;
-    while (isspace((unsigned char)*str))
-        str++;
-    if (*str == '\0')
-        return str;
-    end = str + strlen(str) - 1;
-    while (end > str && isspace((unsigned char)*end))
-        end--;
-    *(end + 1) = '\0';
-    return str;
-}
 
 //---------------------------------------------------------------------
 // Helper: Check if there is a font.txt and take the filename from there.
@@ -163,67 +158,71 @@ char *trim_whitespace(char *str) {
 //---------------------------------------------------------------------
 
 
-bool check_external_resource(int *outWidth, int *outHeight) {
-    // First, check if the variable file exists.
-    FILE *varfp = fopen(variableBmpPath, "r");
-    if (varfp != NULL) {
-        // Read one line from the variable file.
-        int count = 0;
-        char buf[MAX_STRING_LENGTH];
-
-        while (count < MAX_NAMES && fgets(buf, MAX_STRING_LENGTH, varfp) != NULL) {
-            size_t len = strlen(buf);
-            while (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r')) {
-                buf[len - 1] = '\0';
-                len--;
-            }
-            char *trimmed = trim_whitespace(buf);
-            char *delim = strpbrk(trimmed, ".,");
-            if (delim != NULL) {
-                *delim = '\0';
-            }
-            // Trim again in case extra spaces remain.
-            trimmed = trim_whitespace(trimmed);
-            // Only store non-empty names.
-            if (trimmed[0] != '\0') {
-                // Copy trimmed into our static array.
-                strncpy(names[count], trimmed, MAX_STRING_LENGTH - 1);
-                // Ensure null termination.
-                names[count][MAX_STRING_LENGTH - 1] = '\0';
-                count++;
-            }
-        }
-
-        fclose(varfp);
-        if (count == 0) {
-            // No valid names found, return immediately
+bool check_external_resource(int *outWidth, int *outHeight)
+{
+    
+    
+    // 1) Try to open the fonts directory.
+    DIR *dirp = opendir(FONTS_DIR);
+    if (!dirp) {
+        // Attempt to create the directory if it doesn’t exist.
+        int result = mkdir(FONTS_DIR, 0755); 
+        if (result != 0)
+        {
+            // If creation fails, return false.
+            // You could log an error with errno if desired.
             return false;
         }
+        // Directory is created, but it’s presumably empty, so return false.
+        return false;
+    }
 
-        fontSelection = fontSelection % count; //to loop it back around
-        
-        snprintf(externalBmpPathBuffer, MAX_STRING_LENGTH, "/storage/sdcard0/%s.bmp", names[fontSelection]);
 
-        // Test if the constructed file exists.
-        FILE *testfp = fopen(externalBmpPathBuffer, "rb");
-        if (testfp != NULL) {
-            fclose(testfp);
-            externalBmpPath = externalBmpPathBuffer;
-        } else {
-            externalBmpPath = standardBmpPath;
+    int count = 0;
+    struct dirent *dp;
+
+    // 2) Read directory entries. Collect .bmp filenames into 'names[]'
+    while ((dp = readdir(dirp)) != NULL && count < MAX_NAMES)
+    {
+        // Skip "." and ".." entries, or any directory.
+        if (dp->d_name[0] == '.')
+            continue;
+
+        // We only care about files that end with ".bmp" (case-sensitive).
+        const char *ext = strstr(dp->d_name, ".bmp");
+        if (ext && ext[4] == '\0')  // ensure ".bmp" is at the end
+        {
+            // Store the entire filename (including extension).
+            strncpy(names[count], dp->d_name, MAX_STRING_LENGTH - 1);
+            names[count][MAX_STRING_LENGTH - 1] = '\0';
+            count++;
         }
     }
-    if(!externalBmpPath)
+
+    closedir(dirp);
+
+    // If no .bmp files were found, return false.
+    if (count == 0) {
         return false;
-    // Open the chosen BMP file and check its header.
-    FILE *fp = fopen(externalBmpPath, "rb");
-    if (!fp)
+    }
+
+    // 3) Pick the file based on fontSelection.
+    fontSelection = fontSelection % count;
+    snprintf(externalBmpPathBuffer, MAX_STRING_LENGTH,
+             "%s/%s",FONTS_DIR, names[fontSelection]);
+
+    // 4) Open the chosen BMP file and check its header.
+    FILE *fp = fopen(externalBmpPathBuffer, "rb");
+    if (!fp) {
         return false;
+    }
+
     uint8_t header[54];
     if (fread(header, 1, 54, fp) < 54) {
         fclose(fp);
         return false;
     }
+    // Basic BMP signature check
     if (header[0] != 'B' || header[1] != 'M') {
         fclose(fp);
         return false;
@@ -233,17 +232,27 @@ bool check_external_resource(int *outWidth, int *outHeight) {
     int16_t bpp = *(int16_t *)&header[28];
     uint32_t compression = *(uint32_t *)&header[30];
     fclose(fp);
-    if (compression != 0)
+
+    // 5) Validate that it’s a 32‑bpp uncompressed BMP.
+    if (compression != 0) {
         return false;
-    if (bpp != 32)
+    }
+    if (bpp != 32) {
         return false;
-    
-    //This should ensure that there a font is 16 tiles high and 16*pages tiles wide
-    if ((w % (16 * TILE_WIDTH) != 0) || !(h == (16 * TILE_HEIGHT)) ) {
+    }
+
+    // 6) Check our tile constraints.
+    // We expect 'w' to be multiple of (16 * TILE_WIDTH),
+    // and 'h' to equal (16 * TILE_HEIGHT).
+    if ((w % (16 * TILE_WIDTH) != 0) || (h != (16 * TILE_HEIGHT))) {
         return false;
-    }    
+    }
+
+    // # of font pages:
     fontPages = w / TILE_WIDTH / 16;
-        
+
+    // 7) If all checks pass, set externalBmpPath and output dims.
+    externalBmpPath = externalBmpPathBuffer;
     *outWidth  = w;
     *outHeight = h;
     return true;
@@ -255,7 +264,6 @@ void checkKeypress(void) {
     if (fd < 0) {
         fd = open(INPUT_FILENAME, O_RDONLY | O_NONBLOCK);
         if (fd < 0) {
-            perror("open");
             return;
         } else {
             pfd.fd = fd;
@@ -303,7 +311,6 @@ void checkKeypress(void) {
 //---------------------------------------------------------------------
 int* EwLoadResource(int param_1, unsigned int param_2)
 {
-
 
     // Resolve our own hook first.
     if (!real_EwLoadResource) {
