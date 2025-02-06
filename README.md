@@ -22,11 +22,11 @@ important to uninstall these first!
 ##### Manual install
 - `adb push o3-multipage-osd_1.1.0_pigeon-glasses-v2.ipk /tmp`
 - open up shell with `adb shell`
-- `opkg install /tmp/o3-multipage-osd_1.1.0_pigeon-glasses-v2.ipk`
-- or `opkg upgrade /tmp/o3-multipage-osd_1.1.0_pigeon-glasses-v2.ipk` to upgrade an older version.
+- `opkg install /tmp/o3-multipage-osd_1.1.1_pigeon-glasses-v2.ipk`
+- or `opkg upgrade /tmp/o3-multipage-osd_1.1.1_pigeon-glasses-v2.ipk` to upgrade an older version.
 
 ##### Configuration
-- copy all the fonts you want to use (max. 10) into the /fonts/ directory on your SD card. **This applies to ver. 1.1.1 onwards font.txt is no longer needed**
+- copy all the fonts you want to use (max. 10) into the /fonts/ directory on your SD card. **This applies to ver. 1.1.1 onwards: font.txt is no longer needed!** If you are on an older version please update.
 - If you are using INAV then in the OSD tab select "AVATAR" to get the 53*20 grid. For Betaflight simply pick HD.
 - Insert the SD card into the goggles and it should automatically enable the custom font.
 - To toggle between fonts in the /fonts/ folder press the back button (next to the record button) and hold for roughly 7 seconds.
