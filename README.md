@@ -15,6 +15,7 @@ important to uninstall these first!
 - This mod also records the OSD to a .osd file. This is always enabled. A tool for the overlay is coming soon.
 - Font selection is done by placing the fonts you want to use int /fonts/ on the SD card.
 - You put several fonts into the /fonts/ folder and then switch between them by long pressing the back button on the goggles (hold for ~7s).
+- OSD information is stored in a .osd file on the goggles. You can create a transparent overlay using this tool https://github.com/xNuclearSquirrel/O3_OverlayTool
 
 ##### Install
 - coming soon 
