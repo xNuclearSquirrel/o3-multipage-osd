@@ -1,5 +1,5 @@
 # o3-multipage-osd
-Mod for enabling multipage OSD (up to 3 pages) for the O3 on the V2 goggles.
+Mod for enabling multipage OSD for the O3 on the V2 goggles.
 This mod combines and replaces two previous mods:
 - o3-osd-record
 - o3-custom-fonts
