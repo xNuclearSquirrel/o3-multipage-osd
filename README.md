@@ -39,7 +39,7 @@ important to uninstall these first!
 - ~~You need to manually select the font! Automatic font selection based on the FC firmware is not supported! If you switch between INav and Betaflight frequently consider having two SD cards with differnt fonts to swap in and out.~~ fixed in 1.1.0 by having a switch button.
 - ~~Only max. 3 font pages are supported.~~ fixed in 1.1.0 through horizontal page alignment.
 - If the font is not as it should be, or the SD card is missing the mod will always try to default to the standard DJI OSD rendering.
-
+- Leaving the /fonts/ folder empty will disable the mod and fall back to the standard DJI OSD. It will also disable OSD recording, a .osd fill is still created but it is empty.
 
 - **Test carefully this is by no means well and thoroughly tested. There could be overallocations of memory and you could run into issues such as SD speed low warnings. If you encounter anything strange please report it!**
 
