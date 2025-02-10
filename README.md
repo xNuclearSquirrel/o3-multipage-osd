@@ -46,3 +46,10 @@ important to uninstall these first!
 
 ##### Credits
 - Thanks to Joonas for the help when developing this and SNEAKY_FPV for letting me use his fonts!
+
+
+## Support the Project 💖
+If you find this project useful, consider donating to support development!
+
+[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/donate/?hosted_button_id=BSA49E6J5DLM4)
+
