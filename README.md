@@ -17,6 +17,12 @@ important to uninstall these first!
 - You put several fonts into the /fonts/ folder and then switch between them by long pressing the back button on the goggles (hold for ~7s).
 - OSD information is stored in a .osd file on the goggles. You can create a transparent overlay using this tool https://github.com/xNuclearSquirrel/O3_OverlayTool
 
+Version 2.0.0 (Currently in testing) will enable:
+- 15 default fonts on the goggles which will be used if no SD card is inserted.
+- Classic .png font support, fonts can be downloaded here https://sites.google.com/view/sneaky-fpv/home
+- Support for 3 grid sizes: (SD: 30x15, O3: 53x20, HD: 60x22).
+- Grid size selection is done manually by selecting an _HD, _O3, or _SD font.
+
 ##### Install
 - Go to [WTF.OS](https://fpv.wtf/). If you have not done so root the goggles and install WTTFOS
 - Go to the package manager, if you had previously installed - `o3-osd-record` or  `o3-custom-fonts` disable those first.
