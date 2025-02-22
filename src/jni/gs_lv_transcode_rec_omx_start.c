@@ -1,4 +1,4 @@
-// gs_lv_transcode_rec_omx_hooks.c
+// gs_lv_transcode_rec_omx_start.c
 
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -9,9 +9,9 @@
 #include <string.h>     // For snprintf, strncpy, strncat, strrchr
 #include <time.h>       // For clock_gettime()
 
-#include "ring_buffer.h"  // Include the header file
-#include "o3-custom-fonts.h"  // Make sure to include the header
-
+#include "ring_buffer.h"
+#include "o3-custom-fonts.h" 
+#include "font_list.h"  // for fontSelection, g_curRows/g_curCols, etc.
 
 // Define the type signatures of the original functions
 typedef int (*orig_gs_lv_transcode_rec_omx_start_t)(int);
@@ -21,7 +21,6 @@ typedef int (*orig_gs_lv_transcode_rec_omx_stop_t)(void *);
 pthread_t worker_thread;               // Thread identifier
 volatile int thread_running = 0;       // Flag to indicate if the thread is running
 
-// Define the ring buffer and recording flag
 ring_buffer_t ring_buffer;
 volatile int recording_active = 0;     // Recording active flag
 
@@ -32,38 +31,80 @@ FILE *osd_file = NULL;
 uint32_t recording_start_time = 0;
 
 
+static int actualFrameSize = 1320;
 
-void write_osd_file_header(void) {
-    char firmware[4] = {0};    // will hold up to first 4 bytes of the font name
-    char header[36] = {0};     // 32 bytes for the remainder + 4 bytes for "DJO3"
 
-    // 1) Validate fontSelection and check if the name is non-empty
-    if (fontSelection >= 0 && fontSelection < MAX_NAMES && names[fontSelection][0] != '\0')
+/**
+ * We write a 40-byte header:
+ *  - Bytes 0..3:  up to 4 bytes from the font name (firmware).
+ *  - Bytes 4..31: next 28 bytes of the font name (or 0 if shorter).
+ *  - Bytes 32..35: "DJO3"
+ *  - Byte 36: colCount
+ *  - Byte 37: 0
+ *  - Byte 38: rowCount
+ *  - Byte 39: 0
+ */
+void write_osd_file_header(void)
+{
+    char firmware[4] = {0};
+    char remainder[28] = {0};
+    char signature[4] = {'D','J','O','3'};  // "DJO3"
+
+    // 1) Derive a short name from the chosen font. 
+    //    We can get the current 'names[fontSelection]' or from 'g_chosenFontPath', etc.
+    //    For simplicity, let's do the same approach as your old code:
+    char *fontName = names[fontSelection];
+    if (fontName[0] != '\0')
     {
-        // Copy up to 4 bytes into `firmware`
-        strncpy(firmware, names[fontSelection], 4);
-
-        // If there’s more than 4 bytes, copy the next 32 into `header`
-        size_t length = strlen(names[fontSelection]);
+        // Extract the base name (strip the directory path)
+        char *base = strrchr(fontName, '/');
+        if (base)
+            base++;  // Move past the '/'
+        else
+            base = fontName;
+    
+        // Remove the extension (e.g., ".bmp")
+        char *dot = strrchr(base, '.');
+        if (dot)
+            *dot = '\0';
+    
+        // Copy up to 4 bytes into firmware
+        strncpy(firmware, base, 4);
+    
+        // If length > 4, copy the next 28 into remainder
+        size_t length = strlen(base);
         if (length > 4) {
-            strncpy(header, names[fontSelection] + 4, 32);
-            // header remains 36 bytes total;
-            // the last 4 will be overwritten by "DJO3".
+            strncpy(remainder, base + 4, 28);
         }
     }
-    // If the string is invalid or empty, firmware[] and header[] stay all zeros.
+    
 
-    // 2) Always add "DJO3" at the last 4 bytes of `header`
-    memcpy(header + 32, "DJO3", 4);
+    // 2) Write them out
+    // firmware[4] + remainder[28] => total 32
+    fwrite(firmware,   1, 4,  osd_file);
+    fwrite(remainder,  1, 28, osd_file);
 
-    // 3) Write them out
-    fwrite(firmware, sizeof(firmware), 1, osd_file);
-    fwrite(header,   sizeof(header),   1, osd_file);
+    // 3) Then "DJO3"
+    fwrite(signature, 1, 4, osd_file);
+
+    // 4) Then the row/col. 
+    //    We store col in [36], row in [38], with 37/39=0.
+    //    We get them from g_curCols, g_curRows.
+    uint8_t colCount = (uint8_t)g_curCols;
+    uint8_t rowCount = (uint8_t)g_curRows;
+
+    actualFrameSize = g_curRows * g_curCols;
+    uint8_t last4[4];
+    last4[0] = colCount;
+    last4[1] = 0;
+    last4[2] = rowCount;
+    last4[3] = 0;
+    fwrite(last4, 1, 4, osd_file);
 }
 
-
 // Worker thread function implementation
-void* worker_thread_func(void* arg) {
+void* worker_thread_func(void* arg)
+{
     int header_written = 0;
 
     while (recording_active || ring_buffer.head != ring_buffer.tail) {
@@ -93,16 +134,17 @@ void* worker_thread_func(void* arg) {
                 header_written = 1;
             }
 
-
-
-            // Write delta_time, frame_size, and OSD data to the file
+            // Write delta_time
             fwrite(&entry.delta_time, sizeof(uint32_t), 1, osd_file);
-            fwrite(entry.osd_frame_data, sizeof(uint16_t), 1060, osd_file);
+
+            // Instead of always writing 1060, we write (g_curRows * g_curCols).
+            // But if you want to keep it exactly 1060, that's also possible.
+            // Let's do the smaller portion for a “correct” file:
+
+            fwrite(entry.osd_frame_data, sizeof(uint16_t), actualFrameSize, osd_file);
         } else {
             pthread_mutex_unlock(&ring_buffer.mutex);
-
-            // Sleep briefly if no data
-            usleep(1000);  // Sleep for 1 millisecond
+            usleep(1000);  // Sleep 1 ms
         }
     }
 
@@ -114,18 +156,21 @@ void* worker_thread_func(void* arg) {
 
     return NULL;
 }
+
+
 // Hook for the `gs_lv_transcode_rec_omx_start` function
-int gs_lv_transcode_rec_omx_start(int param_1) {
-    // Get a handle to the original function
+int gs_lv_transcode_rec_omx_start(int param_1)
+{
     static orig_gs_lv_transcode_rec_omx_start_t orig_func = NULL;
     if (!orig_func) {
-        orig_func = (orig_gs_lv_transcode_rec_omx_start_t)dlsym(RTLD_NEXT, "gs_lv_transcode_rec_omx_start");
+        orig_func = (orig_gs_lv_transcode_rec_omx_start_t)
+            dlsym(RTLD_NEXT, "gs_lv_transcode_rec_omx_start");
         if (!orig_func) {
-            return -1; // Return an error if the original function can't be found
+            return -1;
         }
     }
 
-    // Call the original function and capture its return value
+    // Call the original function
     int result = orig_func(param_1);
 
     // Access the 0xb8 flag at param_1 + 0xb8
@@ -134,26 +179,25 @@ int gs_lv_transcode_rec_omx_start(int param_1) {
     if (flag_b8 == 0) {
         // Recording started
         if (!recording_active) {
-            // Initialize the ring buffer
+            // Initialize ring buffer
             ring_buffer.head = 0;
             ring_buffer.tail = 0;
             pthread_mutex_init(&ring_buffer.mutex, NULL);
             pthread_cond_init(&ring_buffer.not_empty, NULL);
             pthread_cond_init(&ring_buffer.not_full, NULL);
 
-            // Open the OSD file
+            // Build the .osd filename
             char *file_name_ptr = (char *)((uint8_t *)param_1 + 0x150);
             char osd_file_name[256];
-
             strncpy(osd_file_name, file_name_ptr, sizeof(osd_file_name) - 1);
             osd_file_name[sizeof(osd_file_name) - 1] = '\0';
 
             char *dot = strrchr(osd_file_name, '.');
-            if (dot != NULL) {
+            if (dot) {
                 *dot = '\0';
             }
-
-            strncat(osd_file_name, ".osd", sizeof(osd_file_name) - strlen(osd_file_name) - 1);
+            strncat(osd_file_name, ".osd",
+                    sizeof(osd_file_name) - strlen(osd_file_name) - 1);
 
             osd_file = fopen(osd_file_name, "wb");
             if (!osd_file) {
@@ -164,8 +208,8 @@ int gs_lv_transcode_rec_omx_start(int param_1) {
 
             struct timespec ts;
             clock_gettime(CLOCK_MONOTONIC, &ts);
-            recording_start_time = (ts.tv_sec * 1000) + (ts.tv_nsec / 1000000);
-
+            recording_start_time = (uint32_t)
+                ((ts.tv_sec * 1000) + (ts.tv_nsec / 1000000));
 
             if (!thread_running) {
                 thread_running = 1;
@@ -184,22 +228,24 @@ int gs_lv_transcode_rec_omx_start(int param_1) {
     return result;
 }
 
+
 // Hook for the `gs_lv_transcode_rec_omx_stop` function
-int gs_lv_transcode_rec_omx_stop(void *param_1) {
-    // Get a handle to the original function
+int gs_lv_transcode_rec_omx_stop(void *param_1)
+{
     static orig_gs_lv_transcode_rec_omx_stop_t orig_stop_func = NULL;
     if (!orig_stop_func) {
-        orig_stop_func = (orig_gs_lv_transcode_rec_omx_stop_t)dlsym(RTLD_NEXT, "gs_lv_transcode_rec_omx_stop");
+        orig_stop_func = (orig_gs_lv_transcode_rec_omx_stop_t)
+            dlsym(RTLD_NEXT, "gs_lv_transcode_rec_omx_stop");
         if (!orig_stop_func) {
-            return -1; // Return an error code if the original function can't be found
+            return -1;
         }
     }
 
-    // Access the 0xb8 flag at param_1 + 0xb8
+    // Access the 0xb8 flag
     uint8_t flag_b8 = *(uint8_t *)((uint8_t *)param_1 + 0xb8);
 
     if (flag_b8 == 0) {
-        // Correct call to stop recording
+        // Stop recording
         if (recording_active) {
             recording_active = 0;
 
@@ -223,8 +269,7 @@ int gs_lv_transcode_rec_omx_stop(void *param_1) {
         }
     }
 
-    // Call the original stop function and capture its return value
+    // Call the original stop function
     int stop_result = orig_stop_func(param_1);
-
     return stop_result;
 }
