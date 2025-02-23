@@ -20,11 +20,13 @@ This mod combines and replaces two previous mods:
 - Then search for `o3-multipage-osd` and install.
 
 ##### Configuration
+- Fonts for this mod are available from [Sneaky_FPV](https://sites.google.com/view/sneaky-fpv/home)s website under ***WTFOS** > "O3 + Goggles v2 Mod Format".
 - copy all the fonts you want to use (max. 15) into the /fonts/ directory on your SD card.
 - Each font exists in three resolutions:
       **SD: 30x15, O3: 53x20, HD: 60x22**
    
 - For Betaflight the default is O3 (53x20), if you want to use a different resolution set it via CLI e.g. `set osd_canvas_height = 22` and `set osd_canvas_width = 60`.
+- For INAV select "AVATAR" in the OSD tab for the O3 resolution and DJIWTF for HD.
 - To toggle between fonts in the /fonts/ folder press the back button (next to the record button) and hold for roughly 6 seconds. When restarting the goggles they will remember the font which was used last.
 - If you start the goggles without an SD card it will load the default fonts. There are quite a lot, so just press and hold the back button until you find one that works. Or insert the SD and press the back button to switch back into the SD directory.
 
