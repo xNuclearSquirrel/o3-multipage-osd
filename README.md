@@ -8,7 +8,7 @@ This mod combines and replaces two previous mods:
 - The mod opens font images from the SD Card and uses them as the OSD font resource.
 - There are also 15 fonts installed on the goggles as a backup (one for each size and system).
 - The mod directly interprets the msp DisplayPort stream and enables the use of multiple font pages.
-- The font layout should be the classic 1-column .png format.
+- The font layout should be the classic 1-4-column .png format.
 - This mod also records the OSD to a .osd file. This is always enabled if an SD card is present.
 - I have a free OverlayTool, to create transparent overlays, it's simple but it works. https://github.com/xNuclearSquirrel/O3_OverlayTool
 - Font selection is done by placing the fonts you want to use int /fonts/ on the SD card.
