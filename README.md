@@ -20,7 +20,7 @@ This mod combines and replaces two previous mods:
 - Then search for `o3-multipage-osd` and install.
 
 ##### Configuration
-- Fonts for this mod are available from [Sneaky_FPV](https://sites.google.com/view/sneaky-fpv/home)s website under ***WTFOS** > "O3 + Goggles v2 Mod Format".
+- Fonts for this mod are available from [Sneaky_FPV](https://sites.google.com/view/sneaky-fpv/home)s website under **WTFOS** > "O3 + Goggles v2 Mod Format".
 - copy all the fonts you want to use (max. 15) into the /fonts/ directory on your SD card.
 - Each font exists in three resolutions:
       **SD: 30x15, O3: 53x20, HD: 60x22**
