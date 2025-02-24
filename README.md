@@ -15,7 +15,7 @@ This mod combines and replaces two previous mods:
 - You put several fonts into the /fonts/ folder and then switch between them by long pressing the back button on the goggles (hold for ~6s).
 
 ##### Install
-- Go to [WTF.OS](https://fpv.wtf/). If you have not done so root the goggles and install WTFOS
+- Go to [FPV.WTF](https://fpv.wtf/). If you have not done so root the goggles and install WTFOS
 - Go to the package manager, if you had previously installed - `o3-osd-record` or  `o3-custom-fonts` disable those first.
 - Then search for `o3-multipage-osd` and install.
 
