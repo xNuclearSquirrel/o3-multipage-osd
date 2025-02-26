@@ -13,6 +13,7 @@ This mod combines and replaces two previous mods:
 - I have a free OverlayTool, to create transparent overlays, it's simple but it works. https://github.com/xNuclearSquirrel/O3_OverlayTool
 - Font selection is done by placing the fonts you want to use int /fonts/ on the SD card.
 - You put several fonts into the /fonts/ folder and then switch between them by long pressing the back button on the goggles (hold for ~6s).
+- This mod supports multiple grid resolutions, determined by the font you selected.
 
 ##### Install
 - Go to [FPV.WTF](https://fpv.wtf/). If you have not done so root the goggles and install WTFOS
