@@ -34,7 +34,7 @@ This mod combines and replaces two previous mods:
 
 ##### Changing the Default fonts (optional)
 - There are 15 fonts installed on the goggles by default as a backup when no SD is detected. I've chosen the EUROPA fonts and installed all three resolutions for each flight controller firmware.
-- Since most people will only ever use 2-3 fonts, I would recommend removing some of them so you don't need to cycle through them all. The same goes for people who would like to have a different font.
+- Since most people will only ever use 2-3 fonts, I would recommend removing some of them so you don't need to cycle through them all. The same goes for people who would like to have a different default font.
 
 - The easiest way to do this is to use an online ADB file browser such as [this one](https://app.webadb.com/file-manager).
 - Connect the goggles to your computer via USB, THEN power them on.
