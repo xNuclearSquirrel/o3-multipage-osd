@@ -1,2 +1,4 @@
 #!/system/bin/sh
+/opt/sbin/dinitctl -u disable o3-osd-recording || true
+/opt/sbin/dinitctl -u disable o3-custom-fonts || true
 /opt/sbin/dinitctl -u enable o3-multipage-osd || true

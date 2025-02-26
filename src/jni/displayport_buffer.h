@@ -12,8 +12,8 @@ bool check_external_resource(int *outWidth, int *outHeight);
   If your real layout is 53 rows x 20 columns, just swap them here,
   but keep 20*53=1060.
 */
-#define DP_MAX_ROWS   20
-#define DP_MAX_COLS   53
+#define DP_MAX_ROWS   22
+#define DP_MAX_COLS   60
 #define DP_FRAME_SIZE (DP_MAX_ROWS * DP_MAX_COLS)
 
 /*
@@ -36,6 +36,8 @@ typedef struct {
     - MxDisplayPortDisplayPort_DrawScreen.c
 */
 extern DisplayPortFrameBuffer g_dpFrameBuffer;
+
+extern void* g_myCharItemBuffer[DP_FRAME_SIZE];
 
 /* One‐time initialization of the buffers and mutex (if needed). */
 void dpBufferInitialize(void);

@@ -1,4 +1,3 @@
-// ring_buffer.h
 #ifndef RING_BUFFER_H
 #define RING_BUFFER_H
 
@@ -6,14 +5,16 @@
 #include <stdint.h>
 
 // Define the maximum size of the OSD frame data
-#define FRAME_SIZE 1060  // 1060 should already be enough
+// 60*22 = 1320 is your largest known grid.
+#define FRAME_SIZE 1320
 
 // Define the size of the ring buffer
-#define RING_BUFFER_SIZE 10  // Adjust based on performance requirements
+#define RING_BUFFER_SIZE 6
 
 // Structure for OSD frame data
 typedef struct {
     uint32_t delta_time;
+    // we store the maximum possible glyphs (1320)
     uint16_t osd_frame_data[FRAME_SIZE];
 } RingBufferEntry;
 
@@ -27,9 +28,9 @@ typedef struct {
     pthread_cond_t not_full;
 } ring_buffer_t;
 
-// Declare the ring buffer and recording flag as extern variables
+// Extern variables for hooking or usage in other files
 extern ring_buffer_t ring_buffer;
 extern volatile int recording_active;
-extern uint32_t recording_start_time; // For delta time calculation
+extern uint32_t recording_start_time;
 
 #endif // RING_BUFFER_H

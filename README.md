@@ -1,21 +1,19 @@
-# o3-multipage-osd
+# o3-multipage-osd Version 2.0
 Mod for enabling multipage OSD for the O3 on the V2 goggles.
 This mod combines and replaces two previous mods:
 - o3-osd-record
 - o3-custom-fonts
 
-important to uninstall these first!
-
 ## NOTES
-- The mod opens BMP images from the SD Card and uses them as the OSD font resource.
-- The mod also directly interprets the msp DisplayPort stream and enables the use of multiple font pages.
-- version 1.1.0 and owards supports up to 4 fontpages. ~~Use fonts in /fonts_1.1.0/.~~- all font in /fonts/
-- Using smaller fonts (e.g. a 1 page font when the FC expects 4 pages), will just remap the symbols of higher pages to page 1. So you can use a 1 page Betaflight font if you don't want to use different colors.
-- You can use your own fonts, just make sure it is a v3 BMP object with 32bit depth (alpha channel) and no compression, or use SNEAKY_FPV's fonts in the fonts folder.
-- This mod also records the OSD to a .osd file. This is always enabled. A tool for the overlay is coming soon.
+- The mod opens font images from the SD Card and uses them as the OSD font resource.
+- There are also 15 fonts installed on the goggles as a backup (one for each size and system), these can be changed (see further down).
+- The mod directly interprets the msp DisplayPort stream and enables the use of multiple font pages.
+- The font layout should be the classic 1-4-column .png format.
+- This mod also records the OSD to a .osd file. This is always enabled if an SD card is present.
+- I have a free OverlayTool, to create transparent overlays, it's simple but it works. https://github.com/xNuclearSquirrel/O3_OverlayTool
 - Font selection is done by placing the fonts you want to use int /fonts/ on the SD card.
-- You put several fonts into the /fonts/ folder and then switch between them by long pressing the back button on the goggles (hold for ~7s).
-- OSD information is stored in a .osd file on the goggles. You can create a transparent overlay using this tool https://github.com/xNuclearSquirrel/O3_OverlayTool
+- You put several fonts into the /fonts/ folder and then switch between them by long pressing the back button on the goggles (hold for ~6s).
+- This mod supports multiple grid resolutions, determined by the font you selected.
 
 Version 2.0.0 (Currently in testing) will enable:
 - 15 default fonts on the goggles which will be used if no SD card is inserted.
@@ -24,31 +22,42 @@ Version 2.0.0 (Currently in testing) will enable:
 - Grid size selection is done manually by selecting an _HD, _O3, or _SD font.
 
 ##### Install
-- Go to [WTF.OS](https://fpv.wtf/). If you have not done so root the goggles and install WTTFOS
+- Go to [FPV.WTF](https://fpv.wtf/). If you have not done so root the goggles and install WTFOS
 - Go to the package manager, if you had previously installed - `o3-osd-record` or  `o3-custom-fonts` disable those first.
-- Then searach for `o3-multipage-osd` and install.
-
-##### Manual install
-- `adb push o3-multipage-osd_1.1.4_pigeon-glasses-v2.ipk /tmp`
-- open up shell with `adb shell`
-- `opkg install /tmp/o3-multipage-osd_1.1.4_pigeon-glasses-v2.ipk`
-- or `opkg upgrade /tmp/o3-multipage-osd_1.1.4_pigeon-glasses-v2.ipk` to upgrade an older version.
+- Then search for `o3-multipage-osd` and install.
 
 ##### Configuration
-- copy all the fonts you want to use (max. 10) into the /fonts/ directory on your SD card. **This applies to ver. 1.1.1 onwards: font.txt is no longer needed!** If you are on an older version please update.
-- If you are using INAV then in the OSD tab select "AVATAR" to get the 53*20 grid.
-- For Betaflight simply pick HD. If you had manually changed the grid layout go to CLI and type `set osd_canvas_height = 20` and `set osd_canvas_width = 53`.
-- Insert the SD card into the goggles and it should automatically enable the custom font.
+- Fonts for this mod are available from [Sneaky_FPV](https://sites.google.com/view/sneaky-fpv/home)s website under **WTFOS** > "O3 + Goggles v2 Mod Format".
+- copy all the fonts you want to use (max. 15) into the /fonts/ directory on your SD card.
+- Each font exists in three resolutions:
+      **SD: 30x15, O3: 53x20, HD: 60x22**
+   
+- For Betaflight the default is O3 (53x20), if you want to use a different resolution set it via CLI e.g. `set osd_canvas_height = 22` and `set osd_canvas_width = 60`.
+- For INAV select "AVATAR" in the OSD tab for the O3 resolution and DJIWTF for HD.
+- On the goggles set the canvas mode to HD (Settings -> Display -> Canvas Mode: HD)
 - To toggle between fonts in the /fonts/ folder press the back button (next to the record button) and hold for roughly 6 seconds. When restarting the goggles they will remember the font which was used last.
+- If you start the goggles without an SD card it will load the default fonts. There are quite a lot, so just press and hold the back button until you find one that works. Or insert the SD and press the back button to switch back into the SD directory.
+
+##### Changing the Default fonts (optional)
+- There are 15 fonts installed on the goggles by default as a backup when no SD is detected. I've chosen the EUROPA fonts and installed all three resolutions for each flight controller firmware.
+- Since most people will only ever use 2-3 fonts, I would recommend removing some of them so you don't need to cycle through them all. The same goes for people who would like to have a different default font.
+
+- The easiest way to do this is to use an online ADB file browser such as [this one](https://app.webadb.com/file-manager).
+- Connect the goggles to your computer via USB, THEN power them on.
+- In the ADB browser click add, add the goggles, then connect.
+- You should see the goggle's files system!
+- Navigate to `/opt/default_fonts/` and delete any font you don't need, and click on upload to add a different font. Be aware there is a 15 font limit so you will need to delete some in order to add more.
 
 ##### Known issues
-- ~~You need to manually select the font! Automatic font selection based on the FC firmware is not supported! If you switch between INav and Betaflight frequently consider having two SD cards with differnt fonts to swap in and out.~~ fixed in 1.1.0 by having a switch button.
-- ~~Only max. 3 font pages are supported.~~ fixed in 1.1.0 through horizontal page alignment.
-- If the font is not as it should be, or the SD card is missing the mod will always try to default to the standard DJI OSD rendering.
-- Leaving the /fonts/ folder empty will disable the mod and fall back to the standard DJI OSD. It will also disable OSD recording, a .osd fill is still created but it is empty.
+- The mod is now always enabled. Even with no font in /fonts/ it will just use the default fonts. To switch it off you will need to deinstall it.
 
 - **Test carefully this is by no means well and thoroughly tested. There could be overallocations of memory and you could run into issues such as SD speed low warnings. If you encounter anything strange please report it!**
 
+##### Manual install (alternative)
+- `adb push o3-multipage-osd_2.0.0_pigeon-glasses-v2.ipk /tmp`
+- open up shell with `adb shell`
+- `opkg install /tmp/o3-multipage-osd_2.0.0_pigeon-glasses-v2.ipk`
+- or `opkg upgrade /tmp/o3-multipage-osd_2.0.0_pigeon-glasses-v2.ipk` to upgrade an older version.
 
 ##### Credits
 - Thanks to Joonas for the help when developing this and SNEAKY_FPV for letting me use his fonts!
