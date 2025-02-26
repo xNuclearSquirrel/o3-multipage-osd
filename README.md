@@ -28,8 +28,19 @@ This mod combines and replaces two previous mods:
    
 - For Betaflight the default is O3 (53x20), if you want to use a different resolution set it via CLI e.g. `set osd_canvas_height = 22` and `set osd_canvas_width = 60`.
 - For INAV select "AVATAR" in the OSD tab for the O3 resolution and DJIWTF for HD.
+- On the goggles set the canvas mode to HD (Settings -> Display -> Canvas Mode: HD)
 - To toggle between fonts in the /fonts/ folder press the back button (next to the record button) and hold for roughly 6 seconds. When restarting the goggles they will remember the font which was used last.
 - If you start the goggles without an SD card it will load the default fonts. There are quite a lot, so just press and hold the back button until you find one that works. Or insert the SD and press the back button to switch back into the SD directory.
+
+##### Changing the Default fonts (optional)
+- There are 15 fonts installed on the goggles by default as a backup when no SD is detected. I've chosen the EUROPA fonts and installed all three resolutions for each flight controller firmware.
+- Since most people will only ever use 2-3 fonts, I would recommend removing some of them so you don't need to cycle through them all. The same goes for people who would like to have a different font.
+
+- The easiest way to do this is to use an online ADB file browser such as [this one](https://app.webadb.com/file-manager).
+- Connect the goggles to your computer via USB, THEN power them on.
+- In the ADB browser click add, add the goggles, then connect.
+- You should see the goggle's files system!
+- Navigate to `/opt/default_fonts/` and delete any font you don't need, and click on upload to add a different font. Be aware there is a 15 font limit so you will need to delete some in order to add more.
 
 ##### Known issues
 - The mod is now always enabled. Even with no font in /fonts/ it will just use the default fonts. To switch it off you will need to deinstall it.
