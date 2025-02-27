@@ -31,7 +31,7 @@ This mod combines and replaces two previous mods:
 - Each font exists in three resolutions:
       **SD: 30x15, O3: 53x20, HD: 60x22**
    
-- For Betaflight the default is O3 (53x20), if you want to use a different resolution set it via CLI e.g. `set osd_canvas_height = 22` and `set osd_canvas_width = 60`.
+- For Betaflight the default is O3 (53x20), if you want to use a different resolution set it via CLI e.g. `set osd_canvas_height = 22` and `set osd_canvas_width = 60` to get the WTFOS resolution used with the vista.
 - For INAV select "AVATAR" in the OSD tab for the O3 resolution and DJIWTF for HD.
 - On the goggles set the canvas mode to HD (Settings -> Display -> Canvas Mode: HD)
 - To toggle between fonts in the /fonts/ folder press the back button (next to the record button) and hold for roughly 6 seconds. When restarting the goggles they will remember the font which was used last.
