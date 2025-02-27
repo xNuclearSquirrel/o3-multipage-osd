@@ -19,9 +19,11 @@ This mod combines and replaces two previous mods:
 
 
 ##### Install
+- Make sure your goggles are on the latest firmware, I have not tested with older versions.
 - Go to [FPV.WTF](https://fpv.wtf/). If you have not done so root the goggles and install WTFOS
 - Go to the package manager, if you had previously installed - `o3-osd-record` or  `o3-custom-fonts` disable those first.
 - Then search for `o3-multipage-osd` and install.
+
 
 ##### Configuration
 - Fonts for this mod are available from [Sneaky_FPV](https://sites.google.com/view/sneaky-fpv/home)s website under **WTFOS** > "O3 + Goggles v2 Mod Format".
