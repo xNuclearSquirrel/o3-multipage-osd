@@ -8,18 +8,15 @@ This mod combines and replaces two previous mods:
 - The mod opens font images from the SD Card and uses them as the OSD font resource.
 - There are also 15 fonts installed on the goggles as a backup (one for each size and system), these can be changed (see further down).
 - The mod directly interprets the msp DisplayPort stream and enables the use of multiple font pages.
-- The font layout should be the classic 1-4-column .png format.
+- The font layout should be the classic 1-4-column .png format, which can be downloaded here https://sites.google.com/view/sneaky-fpv/home.
 - This mod also records the OSD to a .osd file. This is always enabled if an SD card is present.
 - I have a free OverlayTool, to create transparent OSD overlays, it's simple but it works. https://github.com/xNuclearSquirrel/O3_OverlayTool
 - Font selection is done by placing the fonts you want to use in /fonts/ on the SD card.
 - You put several fonts into the /fonts/ folder and then switch between them by long pressing the back button on the goggles (hold for ~6s).
 - This mod supports multiple grid resolutions, determined by the font you selected.
-
-Version 2.0.0 (Currently in testing) will enable:
-- 15 default fonts on the goggles which will be used if no SD card is inserted.
-- Classic .png font support, fonts can be downloaded here https://sites.google.com/view/sneaky-fpv/home
-- Support for 3 grid sizes: (SD: 30x15, O3: 53x20, HD: 60x22).
+- Supported are 3 grid sizes: (SD: 30x15, O3: 53x20, HD: 60x22).
 - Grid size selection is done manually by selecting an _HD, _O3, or _SD font.
+
 
 ##### Install
 - Go to [FPV.WTF](https://fpv.wtf/). If you have not done so root the goggles and install WTFOS
