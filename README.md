@@ -53,10 +53,10 @@ This mod combines and replaces two previous mods:
 - **Test carefully this is by no means well and thoroughly tested. There could be overallocations of memory and you could run into issues such as SD speed low warnings. If you encounter anything strange please report it!**
 
 ##### Manual install (alternative)
-- `adb push o3-multipage-osd_2.0.0_pigeon-glasses-v2.ipk /tmp`
+- `adb push o3-multipage-osd_2.0.1_pigeon-glasses-v2.ipk /tmp`
 - open up shell with `adb shell`
-- `opkg install /tmp/o3-multipage-osd_2.0.0_pigeon-glasses-v2.ipk`
-- or `opkg upgrade /tmp/o3-multipage-osd_2.0.0_pigeon-glasses-v2.ipk` to upgrade an older version.
+- `opkg install /tmp/o3-multipage-osd_2.0.1_pigeon-glasses-v2.ipk`
+- or `opkg upgrade /tmp/o3-multipage-osd_2.0.1_pigeon-glasses-v2.ipk` to upgrade an older version.
 
 ##### Credits
 - Thanks to Joonas for the help when developing this and SNEAKY_FPV for letting me use his fonts!

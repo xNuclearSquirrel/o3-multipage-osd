@@ -7,6 +7,7 @@
 #include <pthread.h>
 
 #include "displayport_buffer.h"
+#include "font_list.h"
 
 /* -------------------------------------------------------
    1) Implement the global buffer
@@ -48,9 +49,9 @@ void dpWriteToInactive(uint8_t row, uint8_t col, uint16_t glyphID)
     if (!g_dpFrameBuffer.inited) {
         dpBufferInitialize();
     }
-    if (row < DP_MAX_ROWS && col < DP_MAX_COLS) {
+    if (row < DP_MAX_ROWS && col < DP_MAX_COLS && g_curCols) {
         pthread_mutex_lock(&g_dpFrameBuffer.lock);
-        g_dpFrameBuffer.inactiveBuffer[row * DP_MAX_COLS + col] = glyphID;
+        g_dpFrameBuffer.inactiveBuffer[row * g_curCols + col] = glyphID;
         pthread_mutex_unlock(&g_dpFrameBuffer.lock);
     }
 }

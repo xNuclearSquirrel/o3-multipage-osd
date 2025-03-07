@@ -317,7 +317,7 @@ void MxDisplayPortDisplayPort_DrawScreen(int param_1, int param_2)
             }
             //printf("done\n");
             // 8b) Retrieve glyph from our local buffer
-            uint16_t glyphID = g_renderBuffer[row * DP_MAX_COLS + col];
+            uint16_t glyphID = g_renderBuffer[row * cols + col];
             
 
 
