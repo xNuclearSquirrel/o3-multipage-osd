@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "units": [
+    "o3-multipage-osd"
+  ],
+  "description": "Select default fonts which will be stored on the goggles. In the goggles switch by long pressing the back-button!",
+  "properties": {
+    "unorderable": {
+      "title": "Default Font Selection",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "title": "Font",
+        "properties": {
+          "dropdown1": {
+            "type": "string",
+            "enum": [
+              "INAV",
+              "BTFL",
+              "ARDU",
+              "QUIC",
+              "ULTR"
+            ],
+            "default": "BTFL"
+          },
+          "dropdown2": {
+            "type": "string",
+            "default": "EUROPA",
+            "enum": [
+              "SPHERE",
+              "NEXUS",
+              "EUROPA",
+              "CONTHRAX",
+              "CLASH",
+              "BLINDER",
+              "default"
+            ]
+          },
+          "checkboxes": {
+            "type": "array",
+            "title": "Resolutions",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "enum": [
+                "SD",
+                "O3",
+                "HD"
+              ]
+            },
+            "uniqueItems": true
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "dropdown1": {
+                  "enum": [
+                    "QUIC",
+                    "ULTR"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "dropdown2": {
+                  "enum": [
+                    "default"
+                  ],
+                  "default": "default"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "dropdown2": {
+                  "enum": [
+                    "SPHERE",
+                    "NEXUS",
+                    "EUROPA",
+                    "CONTHRAX",
+                    "CLASH",
+                    "BLINDER"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

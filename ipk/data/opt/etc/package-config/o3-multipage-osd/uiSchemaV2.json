@@ -1,0 +1,41 @@
+{
+  "unorderable": {
+    "ui:options": {
+      "orderable": false,
+      "addable": true,
+      "removable": true
+    },
+    "items": {
+      "ui:field": "layout",
+      "ui:layout": [
+        {
+          "type": "row",
+          "items": ["dropdown1", "dropdown2"]
+        },
+        {
+          "type": "row",
+          "items": ["checkboxes"]
+        }
+      ],
+      "dropdown1": {
+        "ui:widget": "select",
+        "ui:options": {
+          "label": false
+        }
+      },
+      "dropdown2": {
+        "ui:widget": "select",
+        "ui:options": {
+          "label": false
+        }
+      },
+      "checkboxes": {
+        "ui:widget": "checkboxes",
+        "classNames": "inline-checkboxes",
+        "ui:options": {
+          "inline": true
+        }
+      }
+    }
+  }
+}

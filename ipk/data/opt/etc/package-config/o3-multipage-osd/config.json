@@ -1,0 +1,22 @@
+{
+  "unorderable": [
+    {
+      "dropdown1": "INAV",
+      "dropdown2": "EUROPA",
+      "checkboxes": [
+        "SD",
+        "O3",
+        "HD"
+      ]
+    },
+    {
+      "dropdown1": "BTFL",
+      "dropdown2": "EUROPA",
+      "checkboxes": [
+        "SD",
+        "O3",
+        "HD"
+      ]
+    }
+  ]
+}

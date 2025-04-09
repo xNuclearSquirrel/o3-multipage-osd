@@ -1,0 +1,71 @@
+#!/bin/sh
+#
+# This script creates symlinks for fonts based on a JSON configuration.
+# The configuration file is hardcoded as requested.
+#
+# The script will:
+#   - Remove all symlinks in the target folder (data/opt/default_fonts)
+#   - Read the JSON configuration from the config file
+#   - For each item in the "unorderable" array, create symlinks for each
+#     combination of dropdown1, dropdown2, and each checkbox value.
+#   - Only create a symlink if the corresponding file exists in the storage folder:
+#       data/opt/default_fonts_storage/<dropdown1>_<dropdown2>_<checkbox>.png
+#
+
+set -e
+
+# Hardcoded JSON configuration path
+CONFIG_FILE="/opt/etc/package-config/o3-multipage-osd/config.json"
+
+# Directories for font storage and symlink target
+STORAGE_DIR="/opt/default_fonts_storage"
+TARGET_DIR="/opt/default_fonts"
+
+# Check that the configuration file exists
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Configuration file not found: $CONFIG_FILE"
+    exit 1
+fi
+
+# Use entware jq if available
+if [ -f /opt/bin/jq ]; then
+    jqbin=/opt/bin/jq
+else
+    jqbin=jq
+fi
+
+# Ensure the target directory exists
+mkdir -p "$TARGET_DIR"
+
+# Remove any existing symlinks in the target directory
+find "$TARGET_DIR" -type l -exec rm -f {} \;
+
+# Process each item in the "unorderable" array from the JSON config
+$jqbin -c '.unorderable[]' "$CONFIG_FILE" | while read -r item; do
+    # Extract dropdown values
+    dropdown1=$(echo "$item" | $jqbin -r '.dropdown1')
+    dropdown2=$(echo "$item" | $jqbin -r '.dropdown2')
+    
+    # For each checkbox entry in the current item, create a symlink if the file exists in STORAGE_DIR
+    echo "$item" | $jqbin -r '.checkboxes[]' | while read -r checkbox; do
+        # Construct the filename as: <dropdown1>_<dropdown2>_<checkbox>.png
+        font_name="${dropdown1}_${dropdown2}_${checkbox}"
+        storage_file="${STORAGE_DIR}/${font_name}.png"
+        target_link="${TARGET_DIR}/${font_name}.png"
+        
+		if [ -f "$storage_file" ]; then
+			if [ -e "$target_link" ]; then
+				echo "Skipped ${font_name}: symlink already exists"
+			else
+				ln -s "$storage_file" "$target_link"
+				echo "Created symlink for ${font_name}"
+			fi
+		else
+			echo "Skipped ${font_name}: file not found in storage"
+		fi
+
+    done
+done
+
+modmanager enable fpv_glasses o3-multipage-osd
+echo "o3-multipage-osd enabled in modmanager"
