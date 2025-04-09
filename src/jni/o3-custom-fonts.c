@@ -344,7 +344,7 @@ void EwUnlockBitmap(int* lockedPtr)
             if (!loadFont(&g_fontList[fontSelection], &g_bmpData))
                 goto finalize;
         }
-        if (g_bmpData.width < w || g_bmpData.height < h){
+        if (g_bmpData.width != w || g_bmpData.height != h){
             goto finalize;
         }
 
