@@ -35,8 +35,8 @@ This mod combines and replaces two previous mods:
 - For Betaflight the default is O3 (53x20), if you want to use a different resolution, set it via CLI e.g. `set osd_canvas_height = 22` and `set osd_canvas_width = 60` to get the WTFOS resolution used with the vista.
 - For INAV select "DJI NATIVE" (or "AVATAR" for older versions) in the OSD tab for the O3 resolution and DJIWTF for HD.
 
-- To install fonts on your goggles, configure the mod settings in the package manager ([click here](https://fpv.wtf/package/fpv-wtf/o3-multipage-osd)). Simply add the fonts and resolutions you would like to use and they will be installed on the goggles. Alternatively you can manually download them and copy them into the /fonts/ directory on your SD card.
-- To toggle between fonts in the /fonts/ folder press the back button (next to the record button) and hold for roughly 6 seconds. When restarting the goggles they will remember the font which was used last.
+- To install fonts on your goggles, configure the mod settings in the package manager ([click here](https://fpv.wtf/package/fpv-wtf/o3-multipage-osd)). Simply add the fonts and resolutions you would like to use and they will be installed internally on the goggles. Alternatively, you can manually download them and copy them into the /fonts/ directory on your SD card. If the system finds fonts on the SD card, it will select those instead of the internally stored fonts.
+- To toggle between fonts, press the back button (next to the record button) and hold for roughly 6 seconds. When restarting the goggles they will remember the font which was used last.
 
 
 
