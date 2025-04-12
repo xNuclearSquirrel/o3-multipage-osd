@@ -26,7 +26,7 @@
           },
           "dropdown2": {
             "type": "string",
-            "default": "EUROPA",
+            "default": "DJI",
             "enum": [
               "SPHERE",
               "NEXUS",
@@ -34,6 +34,7 @@
               "CONTHRAX",
               "CLASH",
               "BLINDER",
+			  "DJI",
               "default"
             ]
           },
@@ -83,7 +84,8 @@
                     "EUROPA",
                     "CONTHRAX",
                     "CLASH",
-                    "BLINDER"
+                    "BLINDER",
+					"DJI"
                   ]
                 }
               }
